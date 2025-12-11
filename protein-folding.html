@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ויזואליזציה אינטראקטיבית של קיפול חלבונים</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Heebo', sans-serif;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 50%, #0d1b2a 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 30px 20px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00d4ff, #7b2cbf, #ff6b9d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            color: #8892b0;
+            font-weight: 300;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 25px;
+            margin-top: 20px;
+        }
+        
+        @media (max-width: 1100px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .visualization-area {
+            background: rgba(20, 20, 40, 0.7);
+            border-radius: 20px;
+            border: 1px solid rgba(100, 100, 150, 0.3);
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+        
+        #canvas-container {
+            width: 100%;
+            height: 600px;
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            background: radial-gradient(ellipse at center, #1a1a3a 0%, #0a0a1a 100%);
+            cursor: grab;
+        }
+        
+        #canvas-container:active {
+            cursor: grabbing;
+        }
+        
+        .controls-panel {
+            background: rgba(20, 20, 40, 0.8);
+            border-radius: 20px;
+            border: 1px solid rgba(100, 100, 150, 0.3);
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .controls-panel::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .controls-panel::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+        
+        .controls-panel::-webkit-scrollbar-thumb {
+            background: rgba(0, 212, 255, 0.5);
+            border-radius: 4px;
+        }
+        
+        .panel-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #00d4ff;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(0, 212, 255, 0.3);
+        }
+        
+        .control-group {
+            margin-bottom: 20px;
+        }
+        
+        .control-label {
+            display: block;
+            font-size: 0.95rem;
+            color: #a0a0c0;
+            margin-bottom: 10px;
+            font-weight: 400;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Heebo', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            color: #000;
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 212, 255, 0.5);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #7b2cbf, #5a1f8f);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(123, 44, 191, 0.3);
+        }
+        
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(123, 44, 191, 0.5);
+        }
+        
+        .btn-accent {
+            background: linear-gradient(135deg, #ff6b9d, #c44569);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(255, 107, 157, 0.3);
+        }
+        
+        .btn-accent:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(255, 107, 157, 0.5);
+        }
+        
+        .slider-container {
+            position: relative;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(100, 100, 150, 0.3);
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 212, 255, 0.5);
+        }
+        
+        .slider-value {
+            text-align: center;
+            margin-top: 8px;
+            color: #00d4ff;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        select {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(100, 100, 150, 0.3);
+            background: rgba(30, 30, 60, 0.8);
+            color: #e0e0e0;
+            font-family: 'Heebo', sans-serif;
+            font-size: 0.95rem;
+            cursor: pointer;
+            outline: none;
+        }
+        
+        select:hover, select:focus {
+            border-color: #00d4ff;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: rgba(30, 30, 60, 0.6);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            border: 1px solid rgba(100, 100, 150, 0.2);
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00d4ff, #7b2cbf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .stat-label {
+            font-size: 0.75rem;
+            color: #8892b0;
+            margin-top: 5px;
+        }
+        
+        .info-box {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .info-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #00d4ff;
+            margin-bottom: 8px;
+        }
+        
+        .info-text {
+            font-size: 0.85rem;
+            color: #a0a0c0;
+            line-height: 1.6;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: rgba(100, 100, 150, 0.3);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf, #ff6b9d);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 0.8rem;
+            color: #8892b0;
+        }
+        
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 15px;
+            padding: 12px;
+            background: rgba(20, 20, 40, 0.6);
+            border-radius: 10px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+        }
+        
+        .legend-color {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .instructions {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: #a0a0c0;
+            backdrop-filter: blur(5px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧬 ויזואליזציה אינטראקטיבית של קיפול חלבונים</h1>
+            <p class="subtitle">חקור את המבנה התלת-ממדי של חלבונים בתהליך הקיפול</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="visualization-area">
+                <div class="instructions">
+                    🖱️ גרור לסיבוב | 🔍 גלגל עכבר לזום
+                </div>
+                <div id="canvas-container"></div>
+                
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ff6b9d;"></div>
+                        <span>סליל אלפא (α-helix)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #00d4ff;"></div>
+                        <span>גיליון בטא (β-sheet)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #64ff64;"></div>
+                        <span>לולאה (Loop)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ffd93d;"></div>
+                        <span>קשר דיסולפידי</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="controls-panel">
+                <h2 class="panel-title">🎛️ לוח בקרה</h2>
+                
+                <div class="control-group">
+                    <label class="control-label">בחר סוג חלבון:</label>
+                    <select id="proteinType">
+                        <option value="small">חלבון קטן (15 חומצות)</option>
+                        <option value="medium" selected>חלבון בינוני (30 חומצות)</option>
+                        <option value="large">חלבון גדול (50 חומצות)</option>
+                        <option value="insulin">אינסולין</option>
+                        <option value="myoglobin">מיוגלובין (תת-יחידה)</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">מהירות קיפול:</label>
+                    <div class="slider-container">
+                        <input type="range" id="speedSlider" min="1" max="10" value="5">
+                        <div class="slider-value" id="speedValue">5x</div>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">טמפרטורה (K):</label>
+                    <div class="slider-container">
+                        <input type="range" id="tempSlider" min="273" max="373" value="310">
+                        <div class="slider-value" id="tempValue">310K (37°C)</div>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <button class="btn btn-primary" id="foldBtn">▶️ התחל קיפול</button>
+                    <button class="btn btn-secondary" id="unfoldBtn">↩️ פרוש מחדש</button>
+                    <button class="btn btn-accent" id="randomBtn">🎲 חלבון אקראי</button>
+                    <button class="btn btn-secondary" id="resetViewBtn">🔄 איפוס תצוגה</button>
+                </div>
+                
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-label">
+                    <span>שרשרת פרושה</span>
+                    <span id="progressText">0%</span>
+                    <span>מקופל לחלוטין</span>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="energyStat">0</div>
+                        <div class="stat-label">אנרגיה (kJ/mol)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="bondsStat">0</div>
+                        <div class="stat-label">קשרים</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="helixStat">0%</div>
+                        <div class="stat-label">סלילי אלפא</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="sheetStat">0%</div>
+                        <div class="stat-label">גיליונות בטא</div>
+                    </div>
+                </div>
+                
+                <div class="info-box">
+                    <div class="info-title">💡 מידע על קיפול חלבונים</div>
+                    <div class="info-text" id="infoText">
+                        קיפול חלבונים הוא תהליך ביוכימי מורכב בו שרשרת חומצות אמינו מתקפלת למבנה תלת-ממדי ייחודי. 
+                        המבנה הסופי קובע את תפקוד החלבון בתא החי.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Amino acids data with colors
+        const aminoAcids = {
+            'A': { name: 'Alanine', color: 0x8B8B8B, hydrophobic: true },
+            'R': { name: 'Arginine', color: 0x0000FF, hydrophobic: false },
+            'N': { name: 'Asparagine', color: 0x00DCDC, hydrophobic: false },
+            'D': { name: 'Aspartic Acid', color: 0xE60A0A, hydrophobic: false },
+            'C': { name: 'Cysteine', color: 0xE6E600, hydrophobic: true },
+            'E': { name: 'Glutamic Acid', color: 0xE60A0A, hydrophobic: false },
+            'Q': { name: 'Glutamine', color: 0x00DCDC, hydrophobic: false },
+            'G': { name: 'Glycine', color: 0xEBEBEB, hydrophobic: true },
+            'H': { name: 'Histidine', color: 0x8282D2, hydrophobic: false },
+            'I': { name: 'Isoleucine', color: 0x0F820F, hydrophobic: true },
+            'L': { name: 'Leucine', color: 0x0F820F, hydrophobic: true },
+            'K': { name: 'Lysine', color: 0x145AFF, hydrophobic: false },
+            'M': { name: 'Methionine', color: 0xE6E600, hydrophobic: true },
+            'F': { name: 'Phenylalanine', color: 0x3232AA, hydrophobic: true },
+            'P': { name: 'Proline', color: 0xDC9682, hydrophobic: true },
+            'S': { name: 'Serine', color: 0xFA9600, hydrophobic: false },
+            'T': { name: 'Threonine', color: 0xFA9600, hydrophobic: false },
+            'W': { name: 'Tryptophan', color: 0xB45AB4, hydrophobic: true },
+            'Y': { name: 'Tyrosine', color: 0x3232AA, hydrophobic: false },
+            'V': { name: 'Valine', color: 0x0F820F, hydrophobic: true }
+        };
+
+        const proteinSequences = {
+            small: 'AKLWFRGVDSMNCYE',
+            medium: 'MVLSPADKTNVKAAWGKVGAHAGEYGAEAL',
+            large: 'MVLSPADKTNVKAAWGKVGAHAGEYGAEALERMFLSFPTTKTYFPHFDLSHGSAQVKGHGK',
+            insulin: 'MALWMRLLPLLALLALWGPDPAAAFVNQHLCGSHLVEALYLVCGERGFFYTPKT',
+            myoglobin: 'MVLSPADKTNVKAAWGKVGAHAGEYGAEALERMFLSFPTTKTYFPHFDLSHGSAQVKGHGKKVADALTNAVAHVDDMPNALSALSDLHAHKLRVDPVNFKLLSHCLLVTLAAHLPAEFTPAVHASLDKFLASVSTVLTSKYR'
+        };
+
+        // Three.js setup
+        let scene, camera, renderer, controls;
+        let proteinGroup = new THREE.Group();
+        let aminoAcidSpheres = [];
+        let backboneCurve = null;
+        let disulfideBonds = [];
+        let foldingProgress = 0;
+        let isFolding = false;
+        let speed = 5;
+        let temperature = 310;
+        let targetPositions = [];
+        let initialPositions = [];
+        let structures = [];
+
+        // Mouse controls
+        let isDragging = false;
+        let previousMousePosition = { x: 0, y: 0 };
+        let cameraDistance = 150;
+        let cameraRotationX = 0;
+        let cameraRotationY = 0;
+
+        function init() {
+            const container = document.getElementById('canvas-container');
+            
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0a1a);
+            
+            // Camera
+            camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.set(0, 0, cameraDistance);
+            
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+            
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight1 = new THREE.DirectionalLight(0x00d4ff, 0.8);
+            directionalLight1.position.set(50, 50, 50);
+            scene.add(directionalLight1);
+            
+            const directionalLight2 = new THREE.DirectionalLight(0xff6b9d, 0.6);
+            directionalLight2.position.set(-50, -50, 50);
+            scene.add(directionalLight2);
+            
+            const pointLight = new THREE.PointLight(0x7b2cbf, 0.5);
+            pointLight.position.set(0, 0, 100);
+            scene.add(pointLight);
+            
+            // Add protein group to scene
+            scene.add(proteinGroup);
+            
+            // Grid helper
+            const gridHelper = new THREE.GridHelper(200, 20, 0x444444, 0x222222);
+            scene.add(gridHelper);
+            
+            // Initialize protein
+            initProtein(proteinSequences.medium);
+            
+            // Event listeners
+            setupEventListeners();
+            
+            // Handle resize
+            window.addEventListener('resize', onWindowResize);
+            
+            // Start animation loop
+            animate();
+        }
+
+        function initProtein(sequence) {
+            // Clear existing
+            while(proteinGroup.children.length > 0) {
+                proteinGroup.remove(proteinGroup.children[0]);
+            }
+            aminoAcidSpheres = [];
+            disulfideBonds = [];
+            targetPositions = [];
+            initialPositions = [];
+            structures = [];
+            
+            // Create amino acids
+            const spacing = 3;
+            for (let i = 0; i < sequence.length; i++) {
+                const aa = sequence[i];
+                const aaData = aminoAcids[aa] || aminoAcids['A'];
+                
+                // Create sphere
+                const geometry = new THREE.SphereGeometry(1.2, 16, 16);
+                const material = new THREE.MeshPhongMaterial({
+                    color: aaData.color,
+                    emissive: aaData.color,
+                    emissiveIntensity: 0.3,
+                    shininess: 100,
+                    transparent: true,
+                    opacity: 0.9
+                });
+                
+                const sphere = new THREE.Mesh(geometry, material);
+                sphere.position.set((i - sequence.length / 2) * spacing, 0, 0);
+                sphere.userData = { index: i, letter: aa, data: aaData };
+                
+                initialPositions.push(sphere.position.clone());
+                aminoAcidSpheres.push(sphere);
+                proteinGroup.add(sphere);
+                
+                // Add text label (optional, can be performance heavy)
+                // For now, we'll skip text labels for better performance
+            }
+            
+            // Calculate secondary structures
+            calculateSecondaryStructures(sequence);
+            
+            // Calculate target positions
+            calculateTargetPositions(sequence);
+            
+            // Create backbone
+            updateBackbone();
+            
+            // Find disulfide bonds
+            findDisulfideBonds(sequence);
+            
+            updateStats();
+        }
+
+        function calculateSecondaryStructures(sequence) {
+            structures = [];
+            let pos = 0;
+            
+            while (pos < sequence.length) {
+                const rand = Math.random();
+                const len = Math.floor(Math.random() * 8) + 4;
+                
+                if (rand < 0.35 && pos + len <= sequence.length) {
+                    // Alpha helix
+                    for (let i = 0; i < len; i++) {
+                        structures[pos + i] = 'helix';
+                    }
+                    pos += len;
+                } else if (rand < 0.6 && pos + len <= sequence.length) {
+                    // Beta sheet
+                    for (let i = 0; i < len; i++) {
+                        structures[pos + i] = 'sheet';
+                    }
+                    pos += len;
+                } else {
+                    // Loop
+                    const loopLen = Math.min(len, 5);
+                    for (let i = 0; i < loopLen && pos < sequence.length; i++) {
+                        structures[pos] = 'loop';
+                        pos++;
+                    }
+                }
+            }
+            
+            // Fill remaining
+            for (let i = 0; i < sequence.length; i++) {
+                if (!structures[i]) {
+                    structures[i] = 'loop';
+                }
+            }
+        }
+
+        function calculateTargetPositions(sequence) {
+            targetPositions = [];
+            let currentX = -50;
+            let currentY = 0;
+            let currentZ = 0;
+            let helixPhase = 0;
+            let sheetDirection = 1;
+            
+            for (let i = 0; i < sequence.length; i++) {
+                const structure = structures[i];
+                
+                if (structure === 'helix') {
+                    // Spiral for alpha helix
+                    const radius = 8;
+                    const pitch = 2;
+                    const angle = helixPhase * Math.PI / 3;
+                    targetPositions.push(new THREE.Vector3(
+                        currentX + Math.cos(angle) * radius,
+                        currentY + Math.sin(angle) * radius,
+                        currentZ + helixPhase * pitch
+                    ));
+                    helixPhase += 1;
+                    currentX += 2;
+                } else if (structure === 'sheet') {
+                    // Zigzag for beta sheet
+                    targetPositions.push(new THREE.Vector3(
+                        currentX,
+                        currentY + sheetDirection * 5,
+                        currentZ
+                    ));
+                    sheetDirection *= -1;
+                    currentX += 3;
+                } else {
+                    // Random loop
+                    const angle = Math.random() * Math.PI * 2;
+                    const radius = 5 + Math.random() * 10;
+                    targetPositions.push(new THREE.Vector3(
+                        currentX + Math.cos(angle) * radius,
+                        currentY + Math.sin(angle) * radius,
+                        currentZ + (Math.random() - 0.5) * 10
+                    ));
+                    currentX += 2;
+                }
+                
+                // Update structure color
+                let color;
+                if (structure === 'helix') {
+                    color = 0xff6b9d;
+                } else if (structure === 'sheet') {
+                    color = 0x00d4ff;
+                } else {
+                    color = 0x64ff64;
+                }
+                
+                aminoAcidSpheres[i].material.color.setHex(color);
+                aminoAcidSpheres[i].material.emissive.setHex(color);
+            }
+        }
+
+        function updateBackbone() {
+            // Remove old backbone
+            const oldBackbone = proteinGroup.getObjectByName('backbone');
+            if (oldBackbone) {
+                proteinGroup.remove(oldBackbone);
+            }
+            
+            // Create new backbone curve
+            const points = aminoAcidSpheres.map(sphere => sphere.position.clone());
+            const curve = new THREE.CatmullRomCurve3(points);
+            
+            const geometry = new THREE.TubeGeometry(curve, points.length * 2, 0.3, 8, false);
+            const material = new THREE.MeshPhongMaterial({
+                color: 0x8888aa,
+                emissive: 0x444466,
+                emissiveIntensity: 0.2,
+                transparent: true,
+                opacity: 0.7
+            });
+            
+            const tube = new THREE.Mesh(geometry, material);
+            tube.name = 'backbone';
+            proteinGroup.add(tube);
+        }
+
+        function findDisulfideBonds(sequence) {
+            disulfideBonds = [];
+            const cysteines = [];
+            
+            for (let i = 0; i < sequence.length; i++) {
+                if (sequence[i] === 'C') {
+                    cysteines.push(i);
+                }
+            }
+            
+            // Pair up cysteines
+            for (let i = 0; i < cysteines.length - 1; i += 2) {
+                if (cysteines[i + 1]) {
+                    disulfideBonds.push([cysteines[i], cysteines[i + 1]]);
+                }
+            }
+        }
+
+        function updateStats() {
+            const energy = Math.floor(-foldingProgress * 200 + Math.random() * 30);
+            const bondCount = Math.floor(foldingProgress * aminoAcidSpheres.length * 0.4) + disulfideBonds.length;
+            
+            let helixCount = 0, sheetCount = 0;
+            structures.forEach(s => {
+                if (s === 'helix') helixCount++;
+                if (s === 'sheet') sheetCount++;
+            });
+            
+            document.getElementById('energyStat').textContent = energy;
+            document.getElementById('bondsStat').textContent = bondCount;
+            document.getElementById('helixStat').textContent = Math.round(helixCount / structures.length * 100) + '%';
+            document.getElementById('sheetStat').textContent = Math.round(sheetCount / structures.length * 100) + '%';
+            document.getElementById('progressFill').style.width = (foldingProgress * 100) + '%';
+            document.getElementById('progressText').textContent = Math.round(foldingProgress * 100) + '%';
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Update folding animation
+            if (isFolding && foldingProgress < 1) {
+                foldingProgress += 0.008 * speed;
+                if (foldingProgress > 1) foldingProgress = 1;
+                
+                // Interpolate positions with thermal noise
+                const noise = (temperature - 273) / 100 * (1 - foldingProgress) * 0.5;
+                
+                aminoAcidSpheres.forEach((sphere, i) => {
+                    const startPos = initialPositions[i];
+                    const targetPos = targetPositions[i];
+                    
+                    const noiseX = (Math.random() - 0.5) * noise;
+                    const noiseY = (Math.random() - 0.5) * noise;
+                    const noiseZ = (Math.random() - 0.5) * noise;
+                    
+                    sphere.position.lerpVectors(
+                        startPos,
+                        new THREE.Vector3(
+                            targetPos.x + noiseX,
+                            targetPos.y + noiseY,
+                            targetPos.z + noiseZ
+                        ),
+                        foldingProgress
+                    );
+                });
+                
+                updateBackbone();
+                updateStats();
+            } else if (!isFolding && foldingProgress > 0) {
+                foldingProgress -= 0.01 * speed;
+                if (foldingProgress < 0) foldingProgress = 0;
+                
+                aminoAcidSpheres.forEach((sphere, i) => {
+                    const startPos = initialPositions[i];
+                    sphere.position.lerp(startPos, 0.1);
+                });
+                
+                updateBackbone();
+                updateStats();
+            }
+            
+            // Rotate protein group slowly
+            if (!isDragging) {
+                proteinGroup.rotation.y += 0.005;
+            }
+            
+            // Update camera position based on rotation
+            camera.position.x = Math.sin(cameraRotationY) * Math.cos(cameraRotationX) * cameraDistance;
+            camera.position.y = Math.sin(cameraRotationX) * cameraDistance;
+            camera.position.z = Math.cos(cameraRotationY) * Math.cos(cameraRotationX) * cameraDistance;
+            camera.lookAt(0, 0, 0);
+            
+            renderer.render(scene, camera);
+        }
+
+        function setupEventListeners() {
+            const canvas = renderer.domElement;
+            
+            // Mouse drag
+            canvas.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+            });
+            
+            canvas.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    const deltaX = e.clientX - previousMousePosition.x;
+                    const deltaY = e.clientY - previousMousePosition.y;
+                    
+                    cameraRotationY += deltaX * 0.01;
+                    cameraRotationX += deltaY * 0.01;
+                    
+                    // Limit vertical rotation
+                    cameraRotationX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, cameraRotationX));
+                    
+                    previousMousePosition = { x: e.clientX, y: e.clientY };
+                }
+            });
+            
+            canvas.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+            
+            canvas.addEventListener('mouseleave', () => {
+                isDragging = false;
+            });
+            
+            // Mouse wheel zoom
+            canvas.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                cameraDistance += e.deltaY * 0.1;
+                cameraDistance = Math.max(50, Math.min(300, cameraDistance));
+            });
+            
+            // Touch support
+            let touchStart = null;
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (e.touches.length === 1) {
+                    touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                }
+            });
+            
+            canvas.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                if (e.touches.length === 1 && touchStart) {
+                    const deltaX = e.touches[0].clientX - touchStart.x;
+                    const deltaY = e.touches[0].clientY - touchStart.y;
+                    
+                    cameraRotationY += deltaX * 0.01;
+                    cameraRotationX += deltaY * 0.01;
+                    cameraRotationX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, cameraRotationX));
+                    
+                    touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                }
+            });
+            
+            // Controls
+            document.getElementById('foldBtn').addEventListener('click', () => {
+                isFolding = true;
+                updateInfoText('מתחיל תהליך קיפול... החלבון מתקפל למבנה היציב ביותר מבחינה אנרגטית.');
+            });
+            
+            document.getElementById('unfoldBtn').addEventListener('click', () => {
+                isFolding = false;
+                updateInfoText('פורש את החלבון... חזרה למצב השרשרת הליניארית.');
+            });
+            
+            document.getElementById('randomBtn').addEventListener('click', () => {
+                const letters = Object.keys(aminoAcids);
+                let seq = '';
+                const len = 25 + Math.floor(Math.random() * 25);
+                for (let i = 0; i < len; i++) {
+                    seq += letters[Math.floor(Math.random() * letters.length)];
+                }
+                foldingProgress = 0;
+                isFolding = false;
+                initProtein(seq);
+                updateInfoText('נוצר חלבון אקראי חדש עם ' + len + ' חומצות אמינו.');
+            });
+            
+            document.getElementById('resetViewBtn').addEventListener('click', () => {
+                cameraRotationX = 0;
+                cameraRotationY = 0;
+                cameraDistance = 150;
+            });
+            
+            document.getElementById('proteinType').addEventListener('change', (e) => {
+                const seq = proteinSequences[e.target.value];
+                foldingProgress = 0;
+                isFolding = false;
+                initProtein(seq);
+                
+                const names = {
+                    small: 'חלבון קטן',
+                    medium: 'חלבון בינוני',
+                    large: 'חלבון גדול',
+                    insulin: 'אינסולין - הורמון המווסת רמות סוכר בדם',
+                    myoglobin: 'מיוגלובין - חלבון נשיאת חמצן בשרירים'
+                };
+                updateInfoText('נטען: ' + names[e.target.value]);
+            });
+            
+            document.getElementById('speedSlider').addEventListener('input', (e) => {
+                speed = parseInt(e.target.value);
+                document.getElementById('speedValue').textContent = speed + 'x';
+            });
+            
+            document.getElementById('tempSlider').addEventListener('input', (e) => {
+                temperature = parseInt(e.target.value);
+                const celsius = temperature - 273;
+                document.getElementById('tempValue').textContent = temperature + 'K (' + celsius + '°C)';
+                
+                if (temperature > 340) {
+                    updateInfoText('⚠️ טמפרטורה גבוהה! החלבון עלול להיות לא יציב (דנטורציה).');
+                } else if (temperature < 280) {
+                    updateInfoText('❄️ טמפרטורה נמוכה - תהליך הקיפול איטי יותר.');
+                }
+            });
+        }
+
+        function updateInfoText(text) {
+            document.getElementById('infoText').textContent = text;
+        }
+
+        function onWindowResize() {
+            const container = document.getElementById('canvas-container');
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+
+        // Initialize when page loads
+        init();
+    </script>
+</body>
+</html>

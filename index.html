@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>דף הבית - פרויקטים אינטראקטיביים</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Heebo', sans-serif;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 50%, #0d1b2a 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+            overflow-x: hidden;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 60px 20px 80px;
+            position: relative;
+        }
+        
+        h1 {
+            font-size: 4rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00d4ff, #7b2cbf, #ff6b9d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            animation: fadeInDown 1s ease-out;
+        }
+        
+        .subtitle {
+            font-size: 1.4rem;
+            color: #8892b0;
+            font-weight: 300;
+            margin-bottom: 10px;
+            animation: fadeInUp 1s ease-out 0.2s both;
+        }
+        
+        .description {
+            font-size: 1.1rem;
+            color: #a0a8c0;
+            max-width: 800px;
+            margin: 30px auto 0;
+            line-height: 1.8;
+            animation: fadeInUp 1s ease-out 0.4s both;
+        }
+        
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-top: 60px;
+            padding: 0 20px;
+        }
+        
+        .project-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            animation: fadeInUp 0.8s ease-out both;
+        }
+        
+        .project-card:nth-child(1) { animation-delay: 0.1s; }
+        .project-card:nth-child(2) { animation-delay: 0.2s; }
+        .project-card:nth-child(3) { animation-delay: 0.3s; }
+        .project-card:nth-child(4) { animation-delay: 0.4s; }
+        
+        .project-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(123, 44, 191, 0.1), rgba(255, 107, 157, 0.1));
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        
+        .project-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            border-color: rgba(0, 212, 255, 0.5);
+            box-shadow: 0 20px 40px rgba(0, 212, 255, 0.2),
+                        0 0 60px rgba(123, 44, 191, 0.1);
+        }
+        
+        .project-card:hover::before {
+            opacity: 1;
+        }
+        
+        .project-icon {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            display: block;
+            transition: transform 0.4s ease;
+        }
+        
+        .project-card:hover .project-icon {
+            transform: scale(1.2) rotate(5deg);
+        }
+        
+        .project-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #00d4ff;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .project-description {
+            font-size: 1rem;
+            color: #b0b8d0;
+            line-height: 1.8;
+            margin-bottom: 25px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .project-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: #7b2cbf;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .project-link:hover {
+            color: #00d4ff;
+            gap: 15px;
+        }
+        
+        .project-link::after {
+            content: '←';
+            font-size: 1.3rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .project-link:hover::after {
+            transform: translateX(-5px);
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 60px 20px 40px;
+            color: #8892b0;
+            font-size: 0.95rem;
+            margin-top: 80px;
+        }
+        
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(0, 212, 255, 0.5);
+            border-radius: 50%;
+            animation: float 15s infinite ease-in-out;
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            .subtitle {
+                font-size: 1.1rem;
+            }
+            
+            .projects-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .project-card {
+                padding: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+    
+    <div class="container">
+        <header>
+            <h1>ברוכים הבאים</h1>
+            <p class="subtitle">אוסף פרויקטים אינטראקטיביים</p>
+            <p class="description">
+                כאן תוכלו למצוא אוסף של פרויקטים אינטראקטיביים ומדריכים מעוצבים,
+                המשלבים טכנולוגיה מתקדמת עם עיצוב מודרני ונוח למשתמש.
+            </p>
+        </header>
+        
+        <div class="projects-grid">
+            <div class="project-card" onclick="window.location.href='git-github-guide.html'">
+                <span class="project-icon">📚</span>
+                <h2 class="project-title">מדריך Git ו-GitHub</h2>
+                <p class="project-description">
+                    מדריך אינטראקטיבי מקיף ל-Git ו-GitHub. למדו את היסודות של מערכת הבקרת גרסאות,
+                    פקודות בסיסיות, עבודה עם branches, ועוד הרבה יותר.
+                </p>
+                <a href="git-github-guide.html" class="project-link">כנסו לפרויקט</a>
+            </div>
+            
+            <div class="project-card" onclick="window.location.href='israeli-stocks-tracker.html'">
+                <span class="project-icon">📈</span>
+                <h2 class="project-title">מעקב מניות ישראליות</h2>
+                <p class="project-description">
+                    כלי מעקב ויזואלי למניות ישראליות. צפו בגרפים אינטראקטיביים,
+                    נתונים בזמן אמת, וניתוחים מפורטים של השוק הישראלי.
+                </p>
+                <a href="israeli-stocks-tracker.html" class="project-link">כנסו לפרויקט</a>
+            </div>
+            
+            <div class="project-card" onclick="window.location.href='machine-learning-visualization.html'">
+                <span class="project-icon">🤖</span>
+                <h2 class="project-title">ויזואליזציה של למידה מכונה</h2>
+                <p class="project-description">
+                    חקרו את עולם הלמידה המכונה דרך ויזואליזציות אינטראקטיביות.
+                    הבנו איך אלגוריתמים עובדים, איך מודלים לומדים, ומה קורה מאחורי הקלעים.
+                </p>
+                <a href="machine-learning-visualization.html" class="project-link">כנסו לפרויקט</a>
+            </div>
+            
+            <div class="project-card" onclick="window.location.href='protein-folding.html'">
+                <span class="project-icon">🧬</span>
+                <h2 class="project-title">קיפול חלבונים</h2>
+                <p class="project-description">
+                    ויזואליזציה אינטראקטיבית של תהליך קיפול החלבונים.
+                    גלו את המורכבות המדהימה של המבנה התלת-ממדי של חלבונים והשפעתו על תפקודם.
+                </p>
+                <a href="protein-folding.html" class="project-link">כנסו לפרויקט</a>
+            </div>
+        </div>
+        
+        <footer class="footer">
+            <p>נוצר עם ❤️ באמצעות טכנולוגיות ווב מודרניות</p>
+        </footer>
+    </div>
+    
+    <script>
+        // יצירת חלקיקים אנימציה ברקע
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 50;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                
+                const size = Math.random() * 3 + 2;
+                const startX = Math.random() * 100;
+                const startY = Math.random() * 100;
+                const duration = Math.random() * 10 + 10;
+                const delay = Math.random() * 5;
+                
+                particle.style.width = size + 'px';
+                particle.style.height = size + 'px';
+                particle.style.right = startX + '%';
+                particle.style.top = startY + '%';
+                particle.style.animationDuration = duration + 's';
+                particle.style.animationDelay = delay + 's';
+                
+                // אנימציה אקראית
+                const endX = Math.random() * 100;
+                const endY = Math.random() * 100;
+                particle.style.setProperty('--end-x', endX + '%');
+                particle.style.setProperty('--end-y', endY + '%');
+                
+                particlesContainer.appendChild(particle);
+            }
+        }
+        
+        // אפקט hover משופר לכרטיסים
+        document.querySelectorAll('.project-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.zIndex = '10';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.zIndex = '1';
+            });
+        });
+        
+        // אתחול
+        createParticles();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ויזואליזציה אינטראקטיבית של למידה מכונה</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Heebo', sans-serif;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 50%, #0d1b2a 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 30px 20px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00d4ff, #7b2cbf, #ff6b9d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            color: #8892b0;
+            font-weight: 300;
+        }
+        
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        
+        .tab {
+            padding: 12px 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            color: #e0e0e0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        
+        .tab:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .tab.active {
+            background: linear-gradient(135deg, #00d4ff, #7b2cbf);
+            border-color: transparent;
+            color: white;
+        }
+        
+        .content-section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .content-section.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 20px 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .card h2 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: #00d4ff;
+        }
+        
+        .card p {
+            line-height: 1.8;
+            color: #b8bcc8;
+            margin-bottom: 20px;
+        }
+        
+        .visualization-container {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 10px 25px;
+            background: linear-gradient(135deg, #00d4ff, #7b2cbf);
+            border: none;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .info-box {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 20px;
+            border-radius: 15px;
+            border-left: 4px solid #00d4ff;
+        }
+        
+        .info-box h3 {
+            color: #00d4ff;
+            margin-bottom: 10px;
+        }
+        
+        .info-box ul {
+            list-style: none;
+            padding-right: 20px;
+        }
+        
+        .info-box li {
+            padding: 5px 0;
+            color: #b8bcc8;
+        }
+        
+        .info-box li:before {
+            content: "▸ ";
+            color: #7b2cbf;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        
+        .scatter-plot {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .point {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        
+        .point:hover {
+            transform: scale(1.5);
+            z-index: 10;
+        }
+        
+        .legend {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+        
+        .slider-container {
+            margin: 20px 0;
+        }
+        
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            color: #b8bcc8;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00d4ff, #7b2cbf);
+            cursor: pointer;
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00d4ff, #7b2cbf);
+            cursor: pointer;
+            border: none;
+        }
+        
+        .algorithm-demo {
+            margin: 20px 0;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .step {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .step.active {
+            background: #00d4ff;
+            transform: scale(1.3);
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .tabs {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .tab {
+                width: 80%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>ויזואליזציה אינטראקטיבית של למידה מכונה</h1>
+            <p class="subtitle">גלה את הסוגים השונים של אלגוריתמי למידה מכונה דרך דוגמאות ויזואליות</p>
+        </header>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="supervised">למידה מונחית</div>
+            <div class="tab" data-tab="unsupervised">למידה לא מונחית</div>
+            <div class="tab" data-tab="reinforcement">למידה חיזוק</div>
+            <div class="tab" data-tab="overview">סקירה כללית</div>
+        </div>
+        
+        <!-- Supervised Learning -->
+        <div id="supervised" class="content-section active">
+            <div class="card">
+                <h2>למידה מונחית (Supervised Learning)</h2>
+                <p>בלמידה מונחית, האלגוריתם לומד מתוך דוגמאות מסומנות. יש לנו נתוני אימון עם תשובות נכונות, והמודל לומד לקשר בין הקלט לפלט.</p>
+                
+                <div class="info-grid">
+                    <div class="info-box">
+                        <h3>סיווג (Classification)</h3>
+                        <ul>
+                            <li>מטרה: חלוקה לקטגוריות</li>
+                            <li>דוגמאות: זיהוי ספאם, אבחון רפואי</li>
+                            <li>אלגוריתמים: SVM, Random Forest, Neural Networks</li>
+                        </ul>
+                    </div>
+                    <div class="info-box">
+                        <h3>רגרסיה (Regression)</h3>
+                        <ul>
+                            <li>מטרה: חיזוי ערכים רציפים</li>
+                            <li>דוגמאות: חיזוי מחירים, תחזית מזג אוויר</li>
+                            <li>אלגוריתמים: Linear Regression, Polynomial Regression</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button class="btn" onclick="showClassification()">הצג סיווג</button>
+                    <button class="btn btn-secondary" onclick="showRegression()">הצג רגרסיה</button>
+                    <button class="btn btn-secondary" onclick="resetSupervised()">איפוס</button>
+                </div>
+                
+                <div class="visualization-container">
+                    <canvas id="supervisedCanvas"></canvas>
+                </div>
+                
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>מורכבות המודל</span>
+                        <span id="complexityValue">5</span>
+                    </div>
+                    <input type="range" id="complexitySlider" min="1" max="10" value="5" oninput="updateComplexity(this.value)">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Unsupervised Learning -->
+        <div id="unsupervised" class="content-section">
+            <div class="card">
+                <h2>למידה לא מונחית (Unsupervised Learning)</h2>
+                <p>בלמידה לא מונחית, האלגוריתם מחפש דפוסים בנתונים ללא תיוגים. המטרה היא לגלות מבנה נסתר בנתונים.</p>
+                
+                <div class="info-grid">
+                    <div class="info-box">
+                        <h3>קיבוץ (Clustering)</h3>
+                        <ul>
+                            <li>מטרה: חלוקה לקבוצות דומות</li>
+                            <li>דוגמאות: סגמנטציה של לקוחות, זיהוי אנומליות</li>
+                            <li>אלגוריתמים: K-Means, DBSCAN, Hierarchical</li>
+                        </ul>
+                    </div>
+                    <div class="info-box">
+                        <h3>הפחתת ממדים (Dimensionality Reduction)</h3>
+                        <ul>
+                            <li>מטרה: הפחתת מספר משתנים</li>
+                            <li>דוגמאות: ויזואליזציה, דחיסת נתונים</li>
+                            <li>אלגוריתמים: PCA, t-SNE, Autoencoders</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button class="btn" onclick="showClustering()">הצג קיבוץ</button>
+                    <button class="btn btn-secondary" onclick="showPCA()">הצג PCA</button>
+                    <button class="btn btn-secondary" onclick="resetUnsupervised()">איפוס</button>
+                </div>
+                
+                <div class="visualization-container">
+                    <canvas id="unsupervisedCanvas"></canvas>
+                </div>
+                
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>מספר קבוצות (K)</span>
+                        <span id="kValue">3</span>
+                    </div>
+                    <input type="range" id="kSlider" min="2" max="6" value="3" oninput="updateK(this.value)">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Reinforcement Learning -->
+        <div id="reinforcement" class="content-section">
+            <div class="card">
+                <h2>למידה חיזוק (Reinforcement Learning)</h2>
+                <p>בלמידה חיזוק, סוכן לומד לפעול בסביבה על ידי קבלת משוב בצורת תגמולים או עונשים. המטרה היא למקסם את התגמול המצטבר.</p>
+                
+                <div class="info-grid">
+                    <div class="info-box">
+                        <h3>מושגים מרכזיים</h3>
+                        <ul>
+                            <li>סוכן (Agent): הישות הלומדת</li>
+                            <li>סביבה (Environment): העולם בו הסוכן פועל</li>
+                            <li>פעולה (Action): מה שהסוכן עושה</li>
+                            <li>תגמול (Reward): המשוב מהסביבה</li>
+                        </ul>
+                    </div>
+                    <div class="info-box">
+                        <h3>יישומים</h3>
+                        <ul>
+                            <li>משחקים: שחמט, Go, משחקי וידאו</li>
+                            <li>רובוטיקה: ניווט, מניפולציה</li>
+                            <li>מערכות המלצה</li>
+                            <li>ניהול משאבים</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button class="btn" onclick="startRLDemo()">התחל הדגמה</button>
+                    <button class="btn btn-secondary" onclick="resetRL()">איפוס</button>
+                </div>
+                
+                <div class="visualization-container">
+                    <canvas id="reinforcementCanvas"></canvas>
+                </div>
+                
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>מהירות למידה (Learning Rate)</span>
+                        <span id="lrValue">0.1</span>
+                    </div>
+                    <input type="range" id="lrSlider" min="0.01" max="0.5" step="0.01" value="0.1" oninput="updateLR(this.value)">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Overview -->
+        <div id="overview" class="content-section">
+            <div class="card">
+                <h2>סקירה כללית של למידה מכונה</h2>
+                <p>למידה מכונה היא תת-תחום של בינה מלאכותית המתמקד בפיתוח אלגוריתמים שיכולים ללמוד ולשפר ביצועים מניסיון.</p>
+                
+                <div class="visualization-container">
+                    <canvas id="overviewCanvas"></canvas>
+                </div>
+                
+                <div class="info-grid">
+                    <div class="info-box">
+                        <h3>למידה מונחית</h3>
+                        <ul>
+                            <li>נתונים מסומנים</li>
+                            <li>מטרה ברורה</li>
+                            <li>דורש איסוף תיוגים</li>
+                            <li>ביצועים גבוהים</li>
+                        </ul>
+                    </div>
+                    <div class="info-box">
+                        <h3>למידה לא מונחית</h3>
+                        <ul>
+                            <li>נתונים לא מסומנים</li>
+                            <li>גילוי דפוסים</li>
+                            <li>פחות תלות בתיוגים</li>
+                            <li>קשה יותר להערכה</li>
+                        </ul>
+                    </div>
+                    <div class="info-box">
+                        <h3>למידה חיזוק</h3>
+                        <ul>
+                            <li>למידה דרך אינטראקציה</li>
+                            <li>משוב דיפרנציאלי</li>
+                            <li>אופטימיזציה ארוכת טווח</li>
+                            <li>דורש סימולציה/סביבה</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+                
+                // Initialize canvas when switching tabs
+                if (tab.dataset.tab === 'supervised') {
+                    initSupervised();
+                } else if (tab.dataset.tab === 'unsupervised') {
+                    initUnsupervised();
+                } else if (tab.dataset.tab === 'reinforcement') {
+                    initReinforcement();
+                } else if (tab.dataset.tab === 'overview') {
+                    initOverview();
+                }
+            });
+        });
+        
+        // Supervised Learning
+        let supervisedChart = null;
+        let supervisedMode = 'classification';
+        
+        function initSupervised() {
+            const ctx = document.getElementById('supervisedCanvas').getContext('2d');
+            if (supervisedChart) supervisedChart.destroy();
+            
+            if (supervisedMode === 'classification') {
+                showClassification();
+            } else {
+                showRegression();
+            }
+        }
+        
+        function showClassification() {
+            supervisedMode = 'classification';
+            const ctx = document.getElementById('supervisedCanvas').getContext('2d');
+            if (supervisedChart) supervisedChart.destroy();
+            
+            // Generate classification data
+            const class1 = [];
+            const class2 = [];
+            
+            for (let i = 0; i < 50; i++) {
+                class1.push({
+                    x: Math.random() * 40 + 10,
+                    y: Math.random() * 40 + 10
+                });
+                class2.push({
+                    x: Math.random() * 40 + 50,
+                    y: Math.random() * 40 + 50
+                });
+            }
+            
+            supervisedChart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'קטגוריה 1',
+                        data: class1,
+                        backgroundColor: 'rgba(0, 212, 255, 0.6)',
+                        borderColor: 'rgba(0, 212, 255, 1)',
+                        pointRadius: 6
+                    }, {
+                        label: 'קטגוריה 2',
+                        data: class2,
+                        backgroundColor: 'rgba(255, 107, 157, 0.6)',
+                        borderColor: 'rgba(255, 107, 157, 1)',
+                        pointRadius: 6
+                    }, {
+                        label: 'קו ההפרדה',
+                        data: [{x: 0, y: 0}, {x: 100, y: 100}],
+                        type: 'line',
+                        borderColor: 'rgba(123, 44, 191, 1)',
+                        borderWidth: 3,
+                        pointRadius: 0,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                color: '#e0e0e0'
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'סיווג בינארי - הפרדה ליניארית',
+                            color: '#e0e0e0',
+                            font: {
+                                size: 18
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#b8bcc8' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        y: {
+                            ticks: { color: '#b8bcc8' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function showRegression() {
+            supervisedMode = 'regression';
+            const ctx = document.getElementById('supervisedCanvas').getContext('2d');
+            if (supervisedChart) supervisedChart.destroy();
+            
+            // Generate regression data
+            const data = [];
+            for (let i = 0; i < 30; i++) {
+                const x = i * 3;
+                const y = 2 * x + 20 + (Math.random() - 0.5) * 30;
+                data.push({x, y});
+            }
+            
+            // Calculate linear regression
+            const n = data.length;
+            const sumX = data.reduce((sum, p) => sum + p.x, 0);
+            const sumY = data.reduce((sum, p) => sum + p.y, 0);
+            const sumXY = data.reduce((sum, p) => sum + p.x * p.y, 0);
+            const sumXX = data.reduce((sum, p) => sum + p.x * p.x, 0);
+            
+            const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+            const intercept = (sumY - slope * sumX) / n;
+            
+            const lineData = [];
+            for (let x = 0; x <= 90; x += 5) {
+                lineData.push({x, y: slope * x + intercept});
+            }
+            
+            supervisedChart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'נתונים',
+                        data: data,
+                        backgroundColor: 'rgba(0, 212, 255, 0.6)',
+                        borderColor: 'rgba(0, 212, 255, 1)',
+                        pointRadius: 6
+                    }, {
+                        label: 'קו הרגרסיה',
+                        data: lineData,
+                        type: 'line',
+                        borderColor: 'rgba(123, 44, 191, 1)',
+                        borderWidth: 3,
+                        pointRadius: 0,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                color: '#e0e0e0'
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'רגרסיה ליניארית',
+                            color: '#e0e0e0',
+                            font: {
+                                size: 18
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#b8bcc8' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        y: {
+                            ticks: { color: '#b8bcc8' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function updateComplexity(value) {
+            document.getElementById('complexityValue').textContent = value;
+            // Could update visualization based on complexity
+        }
+        
+        function resetSupervised() {
+            initSupervised();
+        }
+        
+        // Unsupervised Learning
+        let unsupervisedChart = null;
+        let unsupervisedMode = 'clustering';
+        let kValue = 3;
+        
+        function initUnsupervised() {
+            const ctx = document.getElementById('unsupervisedCanvas').getContext('2d');
+            if (unsupervisedChart) unsupervisedChart.destroy();
+            showClustering();
+        }
+        
+        function showClustering() {
+            unsupervisedMode = 'clustering';
+            const ctx = document.getElementById('unsupervisedCanvas').getContext('2d');
+            if (unsupervisedChart) unsupervisedChart.destroy();
+            
+            // Generate clustered data
+            const clusters = [];
+            const colors = [
+                'rgba(0, 212, 255, 0.6)',
+                'rgba(255, 107, 157, 0.6)',
+                'rgba(123, 44, 191, 0.6)',
+                'rgba(255, 200, 87, 0.6)',
+                'rgba(0, 255, 127, 0.6)',
+                'rgba(255, 20, 147, 0.6)'
+            ];
+            
+            const centers = [
+                {x: 20, y: 20},
+                {x: 80, y: 20},
+                {x: 50, y: 80},
+                {x: 20, y: 80},
+                {x: 80, y: 80},
+                {x: 50, y: 50}
+            ];
+            
+            for (let k = 0; k < kValue; k++) {
+                const cluster = [];
+                for (let i = 0; i < 30; i++) {
+                    cluster.push({
+                        x: centers[k].x + (Math.random() - 0.5) * 20,
+                        y: centers[k].y + (Math.random() - 0.5) * 20
+                    });
+                }
+                clusters.push({
+                    label: `קבוצה ${k + 1}`,
+                    data: cluster,
+                    backgroundColor: colors[k],
+                    borderColor: colors[k].replace('0.6', '1'),
+                    pointRadius: 6
+                });
+            }
+            
+            // Add centroids
+            const centroidData = centers.slice(0, kValue).map((c, i) => ({
+                label: `מרכז ${i + 1}`,
+                data: [{x: c.x, y: c.y}],
+                backgroundColor: colors[i].replace('0.6', '1'),
+                borderColor: '#fff',
+                pointRadius: 10,
+                pointStyle: 'star'
+            }));
+            
+            unsupervisedChart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [...clusters, ...centroidData]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                color: '#e0e0e0'
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: `K-Means Clustering (K=${kValue})`,
+                            color: '#e0e0e0',
+                            font: {
+                                size: 18
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#b8bcc8' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        y: {
+                            ticks: { color: '#b8bcc8' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function showPCA() {
+            unsupervisedMode = 'pca';
+            const ctx = document.getElementById('unsupervisedCanvas').getContext('2d');
+            if (unsupervisedChart) unsupervisedChart.destroy();
+            
+            // Simulate PCA - dimensionality reduction
+            const originalData = [];
+            for (let i = 0; i < 100; i++) {
+                originalData.push({
+                    x: Math.random() * 100,
+                    y: Math.random() * 100,
+                    z: Math.random() * 100
+                });
+            }
+            
+            // Simulate 2D projection (PCA)
+            const projectedData = originalData.map(p => ({
+                x: p.x * 0.7 + p.z * 0.3,
+                y: p.y * 0.8 + p.z * 0.2
+            }));
+            
+            unsupervisedChart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'הקרנה דו-ממדית (PCA)',
+                        data: projectedData,
+                        backgroundColor: 'rgba(0, 212, 255, 0.4)',
+                        borderColor: 'rgba(0, 212, 255, 1)',
+                        pointRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                color: '#e0e0e0'
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'הפחתת ממדים - PCA (מ-3D ל-2D)',
+                            color: '#e0e0e0',
+                            font: {
+                                size: 18
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#b8bcc8' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        y: {
+                            ticks: { color: '#b8bcc8' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function updateK(value) {
+            kValue = parseInt(value);
+            document.getElementById('kValue').textContent = kValue;
+            if (unsupervisedMode === 'clustering') {
+                showClustering();
+            }
+        }
+        
+        function resetUnsupervised() {
+            initUnsupervised();
+        }
+        
+        // Reinforcement Learning
+        let rlChart = null;
+        let rlAnimation = null;
+        let rlData = [];
+        let episode = 0;
+        let learningRate = 0.1;
+        
+        function initReinforcement() {
+            const ctx = document.getElementById('reinforcementCanvas').getContext('2d');
+            if (rlChart) rlChart.destroy();
+            
+            rlData = [];
+            episode = 0;
+            
+            rlChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'תגמול ממוצע',
+                        data: [],
+                        borderColor: 'rgba(0, 212, 255, 1)',
+                        backgroundColor: 'rgba(0, 212, 255, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }, {
+                        label: 'תגמול מקסימלי',
+                        data: [],
+                        borderColor: 'rgba(255, 107, 157, 1)',
+                        backgroundColor: 'rgba(255, 107, 157, 0.1)',
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                color: '#e0e0e0'
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'למידה חיזוק - שיפור ביצועים לאורך זמן',
+                            color: '#e0e0e0',
+                            font: {
+                                size: 18
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'אפיזודה',
+                                color: '#b8bcc8'
+                            },
+                            ticks: { color: '#b8bcc8' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'תגמול',
+                                color: '#b8bcc8'
+                            },
+                            ticks: { color: '#b8bcc8' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function startRLDemo() {
+            if (rlAnimation) {
+                clearInterval(rlAnimation);
+            }
+            
+            episode = 0;
+            rlData = [];
+            
+            rlAnimation = setInterval(() => {
+                episode++;
+                
+                // Simulate learning progress
+                const baseReward = 20;
+                const improvement = Math.min(episode * learningRate * 2, 50);
+                const noise = (Math.random() - 0.5) * 10;
+                const avgReward = baseReward + improvement + noise;
+                const maxReward = avgReward + 15 + Math.random() * 10;
+                
+                rlData.push({
+                    episode,
+                    avg: Math.max(0, avgReward),
+                    max: Math.max(0, maxReward)
+                });
+                
+                // Keep only last 50 episodes
+                if (rlData.length > 50) {
+                    rlData.shift();
+                }
+                
+                rlChart.data.labels = rlData.map(d => d.episode);
+                rlChart.data.datasets[0].data = rlData.map(d => d.avg);
+                rlChart.data.datasets[1].data = rlData.map(d => d.max);
+                rlChart.update('none');
+                
+                if (episode >= 100) {
+                    clearInterval(rlAnimation);
+                }
+            }, 200);
+        }
+        
+        function updateLR(value) {
+            learningRate = parseFloat(value);
+            document.getElementById('lrValue').textContent = learningRate.toFixed(2);
+        }
+        
+        function resetRL() {
+            if (rlAnimation) {
+                clearInterval(rlAnimation);
+            }
+            initReinforcement();
+        }
+        
+        // Overview
+        let overviewChart = null;
+        
+        function initOverview() {
+            const ctx = document.getElementById('overviewCanvas').getContext('2d');
+            if (overviewChart) overviewChart.destroy();
+            
+            overviewChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['למידה מונחית', 'למידה לא מונחית', 'למידה חיזוק', 'אחר'],
+                    datasets: [{
+                        data: [45, 30, 15, 10],
+                        backgroundColor: [
+                            'rgba(0, 212, 255, 0.8)',
+                            'rgba(255, 107, 157, 0.8)',
+                            'rgba(123, 44, 191, 0.8)',
+                            'rgba(255, 200, 87, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgba(0, 212, 255, 1)',
+                            'rgba(255, 107, 157, 1)',
+                            'rgba(123, 44, 191, 1)',
+                            'rgba(255, 200, 87, 1)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#e0e0e0',
+                                padding: 15,
+                                font: {
+                                    size: 14
+                                }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'התפלגות סוגי למידה מכונה בשימוש',
+                            color: '#e0e0e0',
+                            font: {
+                                size: 18
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Initialize first tab
+        window.addEventListener('load', () => {
+            initSupervised();
+        });
+    </script>
+</body>
+</html>
+
