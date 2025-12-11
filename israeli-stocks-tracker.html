@@ -453,6 +453,7 @@
                     <button class="timeframe-btn" data-timeframe="6mo">6 חודשים</button>
                     <button class="timeframe-btn" data-timeframe="1y">שנה</button>
                     <button class="timeframe-btn" data-timeframe="2y">2 שנים</button>
+                    <button class="timeframe-btn" data-timeframe="5y">5 שנים</button>
                 </div>
                 
                 <div class="chart-container">
@@ -792,7 +793,8 @@
                             currentTimeframe === '1mo' ? '1mo' :
                             currentTimeframe === '3mo' ? '3mo' :
                             currentTimeframe === '6mo' ? '6mo' :
-                            currentTimeframe === '1y' ? '1y' : '2y';
+                            currentTimeframe === '1y' ? '1y' :
+                            currentTimeframe === '2y' ? '2y' : '5y';
                 
                 const interval = currentTimeframe === '1d' ? '5m' : '1d';
                 
@@ -828,7 +830,8 @@
                                 currentTimeframe === '1mo' ? 30 :
                                 currentTimeframe === '3mo' ? 90 :
                                 currentTimeframe === '6mo' ? 180 :
-                                currentTimeframe === '1y' ? 365 : 730;
+                                currentTimeframe === '1y' ? 365 :
+                                currentTimeframe === '2y' ? 730 : 1825;
                     
                     for (let i = 0; i < days; i++) {
                         const date = new Date();
