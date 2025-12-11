@@ -334,6 +334,95 @@
             color: #a0a0c0;
             line-height: 1.6;
         }
+        
+        .ph-scale-container {
+            background: rgba(30, 30, 60, 0.6);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 1px solid rgba(100, 100, 150, 0.3);
+        }
+        
+        .ph-scale-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #00d4ff;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .ph-scale {
+            display: flex;
+            height: 50px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .ph-segment {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #000;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        
+        .ph-segment:hover {
+            transform: scaleY(1.1);
+            z-index: 10;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+        
+        .ph-segment[data-ph="0"] { background: #FF0000; }
+        .ph-segment[data-ph="1"] { background: #FF3300; }
+        .ph-segment[data-ph="2"] { background: #FF6600; }
+        .ph-segment[data-ph="3"] { background: #FF9900; }
+        .ph-segment[data-ph="4"] { background: #FFCC00; }
+        .ph-segment[data-ph="5"] { background: #FFFF00; }
+        .ph-segment[data-ph="6"] { background: #CCFF00; }
+        .ph-segment[data-ph="7"] { background: #99FF00; }
+        .ph-segment[data-ph="8"] { background: #66FF00; }
+        .ph-segment[data-ph="9"] { background: #33FF00; }
+        .ph-segment[data-ph="10"] { background: #00FF00; }
+        .ph-segment[data-ph="11"] { background: #00FF33; }
+        .ph-segment[data-ph="12"] { background: #00FF66; }
+        .ph-segment[data-ph="13"] { background: #00FF99; }
+        .ph-segment[data-ph="14"] { background: #00FFCC; }
+        
+        .ph-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 0.75rem;
+            color: #8892b0;
+        }
+        
+        .ph-indicator {
+            margin-top: 15px;
+            text-align: center;
+            padding: 10px;
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+        
+        .ph-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #00d4ff;
+            margin-bottom: 5px;
+        }
+        
+        .ph-description {
+            font-size: 0.85rem;
+            color: #a0a0c0;
+        }
     </style>
 </head>
 <body>
@@ -399,6 +488,36 @@
                     <div class="loading">טוען מניות...</div>
                 </div>
                 
+                <div class="ph-scale-container">
+                    <div class="ph-scale-title">⚗️ סקלת חומציות (pH)</div>
+                    <div class="ph-scale" id="phScale">
+                        <div class="ph-segment" data-ph="0" title="חומצי מאוד">0</div>
+                        <div class="ph-segment" data-ph="1"></div>
+                        <div class="ph-segment" data-ph="2"></div>
+                        <div class="ph-segment" data-ph="3"></div>
+                        <div class="ph-segment" data-ph="4"></div>
+                        <div class="ph-segment" data-ph="5"></div>
+                        <div class="ph-segment" data-ph="6"></div>
+                        <div class="ph-segment" data-ph="7" title="ניטרלי">7</div>
+                        <div class="ph-segment" data-ph="8"></div>
+                        <div class="ph-segment" data-ph="9"></div>
+                        <div class="ph-segment" data-ph="10"></div>
+                        <div class="ph-segment" data-ph="11"></div>
+                        <div class="ph-segment" data-ph="12"></div>
+                        <div class="ph-segment" data-ph="13"></div>
+                        <div class="ph-segment" data-ph="14" title="בסיסי מאוד">14</div>
+                    </div>
+                    <div class="ph-labels">
+                        <span>חומצי</span>
+                        <span>ניטרלי</span>
+                        <span>בסיסי</span>
+                    </div>
+                    <div class="ph-indicator">
+                        <div class="ph-value" id="phValue">7.0</div>
+                        <div class="ph-description" id="phDescription">ניטרלי - לחץ על הסקלה כדי לשנות</div>
+                    </div>
+                </div>
+                
                 <div class="info-box">
                     <strong>💡 מידע:</strong><br>
                     הנתונים מתעדכנים בזמן אמת מהבורסה לניירות ערך בתל אביב. 
@@ -421,7 +540,7 @@
             { symbol: 'WIX.TA', name: 'ויקס' },
             { symbol: 'FRSX.TA', name: 'Foresight Autonomous' },
             { symbol: 'RDWR.TA', name: 'רדוור' },
-            { symbol: 'MGIC.TA', name: 'מג'יק' },
+            { symbol: 'MGIC.TA', name: 'מגיק' },
             { symbol: 'CGEN.TA', name: 'קומגן' },
             { symbol: 'CLIS.TA', name: 'קליליס' },
             { symbol: 'ALAR.TA', name: 'אלר' },
@@ -466,6 +585,59 @@
                     }
                 });
             });
+            
+            // סקלת חומציות
+            document.querySelectorAll('.ph-segment').forEach(segment => {
+                segment.addEventListener('click', (e) => {
+                    const phValue = parseFloat(e.target.dataset.ph);
+                    updatePhIndicator(phValue);
+                });
+                
+                segment.addEventListener('mouseenter', (e) => {
+                    const phValue = parseFloat(e.target.dataset.ph);
+                    updatePhIndicator(phValue, true);
+                });
+            });
+        }
+        
+        function updatePhIndicator(phValue, isHover = false) {
+            const phValueElement = document.getElementById('phValue');
+            const phDescriptionElement = document.getElementById('phDescription');
+            
+            phValueElement.textContent = phValue.toFixed(1);
+            
+            let description = '';
+            let color = '#00d4ff';
+            
+            if (phValue < 3) {
+                description = 'חומצי מאוד - חומצה חזקה';
+                color = '#FF0000';
+            } else if (phValue < 5) {
+                description = 'חומצי - חומצה חלשה';
+                color = '#FF6600';
+            } else if (phValue < 6.5) {
+                description = 'חומצי קלות';
+                color = '#FFCC00';
+            } else if (phValue === 7) {
+                description = 'ניטרלי';
+                color = '#99FF00';
+            } else if (phValue < 8.5) {
+                description = 'בסיסי קלות';
+                color = '#66FF00';
+            } else if (phValue < 11) {
+                description = 'בסיסי - בסיס חלש';
+                color = '#00FF66';
+            } else {
+                description = 'בסיסי מאוד - בסיס חזק';
+                color = '#00FFCC';
+            }
+            
+            if (!isHover) {
+                phDescriptionElement.textContent = description;
+                phValueElement.style.color = color;
+            } else {
+                phDescriptionElement.textContent = `${description} (עבר עם העכבר)`;
+            }
         }
 
         async function loadStocks() {
